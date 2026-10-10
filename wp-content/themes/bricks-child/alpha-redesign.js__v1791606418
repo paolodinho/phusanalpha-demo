@@ -1,0 +1,361 @@
+(() => {
+  'use strict';
+  const init = () => {
+    const body = document.body;
+    if (!body.classList.contains('alpha-redesign')) return;
+    const main = document.querySelector('main');
+    if (!main) return;
+    if (!main.id) main.id = 'alpha-main';
+    const make = (tag, className, text) => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text) node.textContent = text;
+      return node;
+    };
+    const BASE = location.pathname.indexOf('/phusanalpha-demo/') === 0 ? '/phusanalpha-demo' : '';
+    const link = (text, href, className) => {
+      const node = make('a', className, text);
+      node.href = href.charAt(0) === '/' ? BASE + href : href;
+      return node;
+    };
+    const links = [
+      ['Trang chủ', '/'], ['Dịch vụ', '/dich-vu/'], ['Đội ngũ bác sĩ', '/doi-ngu-bac-si/'],
+      ['Cơ sở', '/co-so/'], ['Liên hệ', '/lien-he/']
+    ];
+    const addLinks = (nav) => links.forEach(([text, href]) => {
+      const item = link(text, href);
+      if (location.pathname === BASE + href) item.setAttribute('aria-current', 'page');
+      nav.append(item);
+    });
+    const skip = link('Đến nội dung chính', `#${main.id}`, 'alpha-skip');
+    body.prepend(skip);
+    const quick = make('nav', 'alpha-quick-nav');
+    quick.setAttribute('aria-label', 'Đi đến thông tin phòng khám');
+    addLinks(quick);
+    main.prepend(quick);
+    const mobileHost = document.querySelector('#brxe-ixfbic');
+    if (mobileHost && !mobileHost.children.length) {
+      const toggle = make('button', 'alpha-mobile-toggle', 'Menu');
+      toggle.type = 'button';
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-controls', 'alpha-mobile-menu');
+      const menu = make('nav', 'alpha-mobile-menu');
+      menu.id = 'alpha-mobile-menu';
+      menu.hidden = true;
+      menu.setAttribute('aria-label', 'Điều hướng trên điện thoại');
+      addLinks(menu);
+      menu.append(link('Về chúng tôi', '/ve-chung-toi/'), link('Hướng dẫn khách hàng', '/huong-dan-khach-hang/'), link('Bài viết', '/tin-tuc/'));
+      const close = () => { menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); };
+      toggle.addEventListener('click', () => {
+        menu.hidden = !menu.hidden;
+        toggle.setAttribute('aria-expanded', String(!menu.hidden));
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !menu.hidden) { close(); toggle.focus(); }
+      });
+      document.addEventListener('click', event => {
+        if (!menu.hidden && !mobileHost.contains(event.target) && !menu.contains(event.target)) close();
+      });
+      menu.addEventListener('click', event => { if (event.target.closest('a')) close(); });
+      toggle.textContent = '';
+      toggle.setAttribute('aria-label', 'Mở menu');
+      toggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+      const cal = link('', '/dat-lich-kham-phong-kham-phu-san-alpha/', 'alpha-mi');
+      cal.setAttribute('aria-label', 'Đặt lịch khám');
+      cal.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M8 14h2M12 14h2M8 17h2"/></svg>';
+      const sbtn = make('button', 'alpha-mi');
+      sbtn.type = 'button'; sbtn.setAttribute('aria-label', 'Tìm kiếm');
+      sbtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+      const form = document.createElement('form');
+      form.className = 'alpha-mobile-search'; form.setAttribute('role', 'search'); form.action = BASE + '/'; form.method = 'get';
+      form.innerHTML = '<input type="search" name="s" placeholder="Tìm kiếm ..." aria-label="Tìm kiếm"><button type="submit">Tìm</button>';
+      menu.prepend(form);
+      sbtn.addEventListener('click', () => { menu.hidden = false; toggle.setAttribute('aria-expanded', 'true'); form.querySelector('input').focus(); });
+      mobileHost.append(cal, sbtn, toggle);
+      document.querySelector('#brx-header').append(menu);
+    }
+    const title = main.querySelector('h1');
+    if (!body.classList.contains('home') && !main.querySelector('.dr-crumb') && title) {
+      const crumb = make('nav', 'alpha-crumb');
+      crumb.setAttribute('aria-label', 'Đường dẫn trang');
+      crumb.append(link('Trang chủ', '/'), make('span', '', '/'), make('span', '', title.textContent.trim()));
+      quick.after(crumb);
+    }
+    if (body.classList.contains('category-dich-vu')) {
+      const hiddenTitle = main.querySelector('h1');
+      const heading = main.querySelector('#brxe-e6050c');
+      if (hiddenTitle && heading) {
+        hiddenTitle.remove();
+        const h1 = make('h1', heading.className, heading.textContent);
+        h1.id = heading.id;
+        heading.replaceWith(h1);
+      }
+    }
+    if (body.classList.contains('home')) {
+      const doctors = main.querySelector('#brxe-cjjaqw');
+      const services = main.querySelector('#brxe-vaqfxw');
+      if (doctors && services) doctors.before(services);
+      const hero = main.querySelector('.home__main-banner-slider');
+      if (hero) {
+        const normalizeClones = () => {
+          hero.querySelectorAll('[id="brxe-ab2b"]').forEach(button => { button.href = BASE + '/lien-he/'; });
+          hero.querySelectorAll('.splide__slide--clone h1').forEach(heading => {
+            const paragraph = make('p', heading.className, heading.textContent);
+            paragraph.id = heading.id;
+            heading.replaceWith(paragraph);
+          });
+        };
+        normalizeClones();
+        new MutationObserver(normalizeClones).observe(hero, { childList: true, subtree: true });
+      }
+      main.querySelectorAll('[id="brxe-ab2b"]').forEach(button => { button.href = BASE + '/lien-he/'; });
+    }
+    main.querySelectorAll('.brxe-post-content, .brxe-text').forEach(node => {
+      if (node.querySelectorAll('h2').length > 2) node.classList.add('alpha-prose');
+    });
+    const doctorSlider = main.querySelector('#brxe-hbiisq');
+    if (doctorSlider) {
+      const flatten = () => {
+        const instance = window.bricksData?.splideInstances?.hbiisq;
+        if (instance) instance.destroy(true);
+        doctorSlider.querySelectorAll('[aria-hidden]').forEach(node => node.removeAttribute('aria-hidden'));
+        doctorSlider.querySelectorAll('[tabindex="-1"]').forEach(node => node.removeAttribute('tabindex'));
+      };
+      flatten();
+      if (document.readyState !== 'complete') window.addEventListener('load', flatten, { once: true });
+      doctorSlider.setAttribute('aria-label', 'Đội ngũ bác sĩ');
+      doctorSlider.querySelectorAll('.splide__list > :not(.splide__slide--clone)').forEach(slide => {
+        slide.removeAttribute('aria-hidden');
+        slide.removeAttribute('inert');
+        slide.querySelectorAll('[tabindex="-1"]').forEach(node => node.removeAttribute('tabindex'));
+      });
+    }
+    main.querySelectorAll('.brxe-44b4ca').forEach(card => {
+      const target = card.querySelector('a[href]');
+      if (target && !card.querySelector('.alpha-card-link')) card.querySelector('.brxe-10b40d')?.append(link('Xem dịch vụ →', target.href, 'alpha-card-link'));
+    });
+    const sections = Array.from(main.querySelectorAll('h2')).filter(heading => {
+      const section = heading.closest('section');
+      return section && section.id && !section.classList.contains('hidden') && !section.querySelector('#ez-toc-container');
+    });
+    if (!body.classList.contains('home') && !body.classList.contains('archive') && !main.querySelector('#ez-toc-container') && !main.querySelector('a[href="#lich-su-hinh-thanh"],a[href="#tim-den-chung-toi"]') && sections.length >= 3) {
+      const nav = make('nav', 'alpha-section-nav');
+      nav.setAttribute('aria-label', 'Nội dung trong trang');
+      const used = new Set();
+      sections.slice(0, 8).forEach(heading => {
+        const section = heading.closest('section');
+        if (!used.has(section.id)) { used.add(section.id); nav.append(link(heading.textContent.trim(), `#${section.id}`)); }
+      });
+      if (nav.childElementCount >= 3) {
+        const first = main.querySelector('.alpha-crumb') || quick;
+        first.after(nav);
+      }
+    }
+    const doctorPosts = main.querySelector('#dr-posts-grid');
+    const doctorMore = main.querySelector('#dr-more');
+    if (doctorPosts && doctorMore) {
+      const cards = Array.from(doctorPosts.children);
+      cards.forEach((card, index) => card.classList.toggle('more', index >= 6));
+      doctorMore.textContent = `Xem thêm bài viết (${Math.max(0, cards.length - 6)})`;
+      doctorMore.setAttribute('aria-controls', doctorPosts.id);
+      doctorMore.setAttribute('aria-expanded', 'false');
+      doctorMore.addEventListener('click', () => {
+        const open = doctorPosts.classList.contains('open');
+        doctorMore.setAttribute('aria-expanded', String(open));
+        doctorMore.textContent = open ? 'Thu gọn bài viết' : `Xem thêm bài viết (${Math.max(0, cards.length - 6)})`;
+      });
+    }
+    const related = main.querySelector('#brxe-wgtniq');
+    if (related) {
+      const cards = Array.from(related.children).filter(card => card.querySelector('.brxe-kxsclm'));
+      if (cards.length > 6) {
+        cards.slice(6).forEach(card => { card.hidden = true; });
+        related.id = 'alpha-related-grid';
+        const more = make('button', 'alpha-action alpha-more', `Xem thêm ${cards.length - 6} bài viết`);
+        more.type = 'button';
+        more.setAttribute('aria-expanded', 'false');
+        more.setAttribute('aria-controls', related.id);
+        more.addEventListener('click', () => {
+          const expand = more.getAttribute('aria-expanded') !== 'true';
+          cards.slice(6).forEach(card => { card.hidden = !expand; });
+          more.setAttribute('aria-expanded', String(expand));
+          more.textContent = expand ? 'Thu gọn bài viết' : `Xem thêm ${cards.length - 6} bài viết`;
+        });
+        related.after(more);
+      }
+    }
+    const grid = body.classList.contains('archive') && main.querySelector('#brxe-86ad60,#brxe-a44a11,#brxe-jlfxbh');
+    if (grid && /\bcategory-(tin-tuc|blog|thong-tin-kien-thuc|kien-thuc-[a-z-]+)\b/.test(body.className)) {
+      /* Bang chu cai kieu tu dien: loc bai tren trang theo chu cai dau cua tieu de */
+      const cards = Array.from(grid.children).filter(card => card.querySelector('a[href]'));
+      const normalize = value => value.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+      const initial = card => {
+        const t = (card.querySelector('h1,h2,h3,h4,h5,h6') || card).textContent.trim();
+        const m = normalize(t).match(/[a-z0-9]/);
+        return m ? m[0].toUpperCase() : '';
+      };
+      const initials = cards.map(initial);
+      const bar = make('nav', 'alpha-az');
+      bar.setAttribute('aria-label', 'Lọc bài theo chữ cái đầu');
+      const empty = make('p', 'alpha-empty', 'Không có bài nào bắt đầu bằng chữ này trên trang hiện tại.');
+      empty.hidden = true;
+      const buttons = [];
+      const apply = letter => {
+        let count = 0;
+        cards.forEach((card, i) => { card.hidden = !!letter && initials[i] !== letter; if (!card.hidden) count++; });
+        buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.letter === (letter || ''))));
+        empty.hidden = count !== 0;
+      };
+      const all = make('button', 'alpha-az-btn', 'Tất cả'); all.type = 'button'; all.dataset.letter = ''; all.setAttribute('aria-pressed', 'true');
+      all.addEventListener('click', () => apply(''));
+      bar.append(all); buttons.push(all);
+      'ABCDEGHIKLMNOPQRSTUVXY'.split('').forEach(letter => {
+        const b = make('button', 'alpha-az-btn', letter); b.type = 'button'; b.dataset.letter = letter;
+        b.setAttribute('aria-pressed', 'false');
+        if (!initials.includes(letter)) b.disabled = true;
+        b.addEventListener('click', () => apply(letter));
+        bar.append(b); buttons.push(b);
+      });
+      grid.before(bar); grid.after(empty);
+    }
+    document.querySelectorAll('.brxe-form').forEach((form, formIndex) => {
+      form.querySelectorAll('input,select,textarea').forEach((field, fieldIndex) => {
+        if (['hidden', 'submit', 'checkbox', 'radio'].includes(field.type)) return;
+        const group = field.closest('.form-group');
+        const label = group?.querySelector('label');
+        const hint = `${label?.textContent || ''} ${field.placeholder || ''}`.toLowerCase();
+        const id = `alpha-field-${formIndex}-${fieldIndex}`;
+        field.id = id;
+        if (label) label.htmlFor = id;
+        if (/điện thoại|phone/.test(hint)) { field.type = 'tel'; field.inputMode = 'tel'; field.autocomplete = 'tel'; }
+        else if (/họ|tên/.test(hint)) field.autocomplete = 'name';
+        else if (field.type === 'email') field.autocomplete = 'email';
+      });
+    });
+    document.querySelectorAll('#brxe-xwoexg .brxe-text-basic').forEach(node => {
+      if (node.querySelector('a')) return;
+      const text = node.textContent.trim();
+      const phone = text.match(/(?:\+84|0)[\d\s.()-]{8,18}/);
+      const email = text.match(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/i);
+      const match = email || phone;
+      if (!match) return;
+      const start = text.indexOf(match[0]);
+      node.replaceChildren(document.createTextNode(text.slice(0, start)), link(match[0], email ? `mailto:${match[0]}` : `tel:${match[0].replace(/[^+\d]/g, '')}`), document.createTextNode(text.slice(start + match[0].length)));
+    });
+    const phone = document.querySelector('a[href^="tel:"]');
+    const actions = make('nav', 'alpha-mobile-actions');
+    actions.setAttribute('aria-label', 'Liên hệ nhanh');
+    if (phone) actions.append(link('Gọi phòng khám', phone.href, 'alpha-action secondary'));
+    actions.append(link('Đặt lịch khám', '/lien-he/', 'alpha-action'));
+    body.append(actions);
+    if (body.classList.contains('error404')) {
+      const help = make('p', '', 'Trang bạn tìm có thể đã thay đổi đường dẫn. Bạn có thể tìm kiếm hoặc chọn thông tin dưới đây.');
+      main.querySelector('h1')?.after(help);
+      const nav = make('nav', 'alpha-confirm-actions');
+      nav.append(link('Về trang chủ', '/', 'alpha-action'), link('Xem dịch vụ', '/dich-vu/', 'alpha-action secondary'));
+      main.append(nav);
+    }
+    document.addEventListener('bricks/form/success', event => {
+      const id = event.detail?.elementId;
+      const form = id ? document.getElementById(String(id).startsWith('brxe-') ? id : `brxe-${id}`) : null;
+      if (form?.classList.contains('form-booking') || event.target.closest?.('.form-booking')) {
+        try { sessionStorage.setItem('alpha_booking_sent', String(Date.now())); } catch (_) { /* Storage can be disabled by browser settings. */ }
+      }
+    });
+    if (body.classList.contains('page-id-4572')) {
+      let sent = 0;
+      try { sent = Number(sessionStorage.getItem('alpha_booking_sent')); } catch (_) { /* Keep the neutral confirmation when storage is unavailable. */ }
+      if (sent > 0 && Date.now() - sent < 1800000) {
+        const heading = main.querySelector('.alpha-confirm-title');
+        const message = main.querySelector('.alpha-confirm-text');
+        if (heading) heading.textContent = 'Đã gửi yêu cầu đặt lịch';
+        if (message) message.textContent = 'Yêu cầu của bạn đã được gửi. Phòng khám sẽ liên hệ để xác nhận thông tin và sắp xếp lịch khám.';
+      }
+    }
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
+/* Banner rong (khong co anh nen) tren trang danh muc: an di de khong chua khoang trong */
+(function () {
+  function hideEmptyBanners() {
+    document.querySelectorAll('main > section.brxe-section').forEach(function (s) {
+      var bg = getComputedStyle(s).backgroundImage;
+      var looksBanner = /aspect-|relative/.test(s.className) && !s.querySelector('h1,h2,img,a,p');
+      if (looksBanner && bg === 'none') { s.hidden = true; s.style.display = 'none'; }
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hideEmptyBanners); else hideEmptyBanners();
+})();
+
+/* Cam nhan khach hang: tu dong chay. Sua cau hinh Splide TRUOC khi Bricks khoi tao (script chay dong bo trong footer).
+   Chi co 3 cam nhan + hien 3 the thi khong co gi de truot -> hien 2 the moi lan cho co chuyen dong; khi co >3 cam nhan se tu dung 3 the. */
+(function () {
+  var el = document.getElementById('brxe-sozdxb');
+  if (!el || !el.dataset.splide) return;
+  try {
+    var o = JSON.parse(el.dataset.splide);
+    var n = el.querySelectorAll('.splide__slide:not(.splide__slide--clone)').length;
+    o.type = 'loop'; o.autoplay = true; o.interval = 4500; o.pauseOnHover = true; o.pauseOnFocus = true; o.speed = 700;
+    o.perMove = 1; o.arrows = true; o.pagination = n > 1;
+    if (n <= 3) { o.perPage = 2; if (o.breakpoints && o.breakpoints['1279']) o.breakpoints['1279'].perPage = '2'; }
+    el.dataset.splide = JSON.stringify(o);
+  } catch (e) { /* giu nguyen cau hinh cu neu JSON loi */ }
+})();
+
+/* Chong chu mo coi (quy tac wording-orphans muc 8) */
+/* Chống chữ mồ côi (1 từ trên 1 dòng) - dán vào JS của mọi site.
+   Nối bằng NBSP từ cuối cùng với từ liền trước trong mọi tiêu đề, đoạn, mục danh sách, nút, chú thích.
+   Đi kèm CSS: h1..h6,.title{text-wrap:balance} p,li,figcaption{text-wrap:pretty} */
+(function () {
+  var SEL = 'h1,h2,h3,h4,h5,h6,p,li,figcaption,blockquote,dd,dt,.btn,.kicker,[data-nowrap-tail],#brx-footer a,#brx-footer .brxe-text-basic,#brx-footer .brxe-text,.brxe-heading,.brxe-post-title,.brxe-button,.alpha-az-btn';
+  function glue(root) {
+    (root || document).querySelectorAll(SEL).forEach(function (el) {
+      if (el.dataset.orphanDone) return;
+      var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null), last = null, n;
+      while ((n = w.nextNode())) if (n.nodeValue.trim()) last = n;
+      if (!last) return;
+      var t = last.nodeValue.replace(/\s+$/, ''), m = t.match(/^([\s\S]*\S)\s+(\S+)$/);
+      if (m && /\S\s+\S/.test(t)) last.nodeValue = m[1] + ' ' + m[2] + last.nodeValue.slice(t.length);
+      else if (last.previousSibling === null && last.parentNode !== el) return; /* từ cuối nằm riêng trong thẻ con: bỏ qua */
+      el.dataset.orphanDone = '1';
+    });
+  }
+  if (document.readyState !== 'loading') glue(); else document.addEventListener('DOMContentLoaded', function () { glue(); });
+  window.icdGlueOrphans = glue;
+})();
+
+
+(function(){var t=document.querySelector('.alpha-float .af-top');if(!t)return;var f=function(){t.classList.toggle('on',window.scrollY>400)};window.addEventListener('scroll',f,{passive:true});f()})();
+
+/* Chống mồ côi cho từ cuối dài (vd "microgam/ngày."): nối 3 từ cuối bằng NBSP */
+(function(){document.querySelectorAll('main p,main li').forEach(function(el){var w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT),n,last=null;while((n=w.nextNode()))if(n.nodeValue.trim())last=n;if(!last)return;var m=last.nodeValue.match(/^([\s\S]*\s)(\S+)\s+(\S+)\s+(\S{9,})(\s*)$/);if(m)last.nodeValue=m[1]+m[2]+' '+m[3]+' '+m[4]+m[5]})})();
+
+/* Cụm in đậm ngắn (số + đơn vị, tên riêng) luôn đi liền nhau */
+(function(){document.querySelectorAll('main p strong,main li strong,main p b,main li b').forEach(function(el){var t=el.textContent;if(el.children.length===0&&t.length<=28&&/\S\s+\S/.test(t))el.textContent=t.replace(/\s+/g,' ')})})();
+
+/* Dự phòng: gỡ cờ ẩn-lúc-tải của hiệu ứng cuộn để nội dung không bao giờ bị kẹt trống */
+(function(){var f=function(){document.querySelectorAll('[data-interaction-hidden-on-load]').forEach(function(e){e.removeAttribute('data-interaction-hidden-on-load');e.style.opacity='';e.style.visibility='';e.style.transform=''})};f();setTimeout(f,1200)})();
+
+/* Gỡ cấu hình hiệu ứng cuộn (enterView + startAnimation) của Bricks để không phần tử nào bị kẹt ở trạng thái ẩn */
+(function(){var f=function(){document.querySelectorAll('[data-interactions]').forEach(function(e){var d=e.getAttribute('data-interactions')||'';if(d.indexOf('enterView')>-1&&d.indexOf('startAnimation')>-1){e.removeAttribute('data-interactions');e.classList.remove('brx-animated');e.style.opacity='';e.style.transform='';e.style.animation=''}})};f();document.addEventListener('DOMContentLoaded',f);window.addEventListener('load',f);})();
+
+/* TẠM THỜI - chẩn đoán iPhone (?diag=1). XOÁ sau khi xong. */
+(function(){if(location.search.indexOf('diag=1')<0)return;var errs=[];window.addEventListener('error',function(e){errs.push((e.message||'')+' @'+(e.filename||'').split('/').pop()+':'+e.lineno)});
+function send(tag){try{var cards=[].slice.call(document.querySelectorAll('.group\\/service')).slice(0,2);var info=cards.map(function(c){var r=c.getBoundingClientRect(),s=getComputedStyle(c);return {rect:[Math.round(r.left),Math.round(r.top+scrollY),Math.round(r.width),Math.round(r.height)],op:s.opacity,vis:s.visibility,tr:s.transform,disp:s.display,ov:s.overflow,anim:s.animationName,cls:c.className.slice(0,90),kids:[].slice.call(c.children).map(function(k){var kr=k.getBoundingClientRect(),ks=getComputedStyle(k);return [Math.round(kr.width),Math.round(kr.height),ks.opacity,ks.visibility,ks.display,ks.filter.slice(0,20)]}),img:[].slice.call(c.querySelectorAll('img')).map(function(i){return [i.complete,i.naturalWidth,Math.round(i.getBoundingClientRect().width),getComputedStyle(i).filter.slice(0,25)]}),pg:(function(){var p=c.parentElement,o=[];for(var n=0;n<3&&p;n++,p=p.parentElement){var q=getComputedStyle(p),b=p.getBoundingClientRect();o.push([p.id||p.className.toString().slice(0,25),Math.round(b.width),q.display,q.gridTemplateColumns.slice(0,40),q.overflowX])}return o})()}});
+var d={tag:tag,ua:navigator.userAgent,vw:innerWidth,dpr:devicePixelRatio,sw:document.documentElement.scrollWidth,touchCallout:CSS.supports('-webkit-touch-callout','none'),errs:errs,cards:info,animEnabled:matchMedia('(prefers-reduced-motion: reduce)').matches};
+fetch('/wp-admin/admin-ajax.php?action=alpha_diag',{method:'POST',body:JSON.stringify(d),keepalive:true})}catch(e){fetch('/wp-admin/admin-ajax.php?action=alpha_diag',{method:'POST',body:'diagerr '+e.message})}}
+window.addEventListener('load',function(){setTimeout(function(){send('load+1s')},1000);setTimeout(function(){var c=document.querySelector('.group\\/service');if(c)c.scrollIntoView({block:'center'});setTimeout(function(){send('afterScroll')},1500)},2500)})})();
+
+/* Báo cáo ẩn cho iOS (tối đa 1 lần/phiên): nếu thẻ dịch vụ có kích thước nhưng ảnh/chữ không hiện, gửi trạng thái về máy chủ để chẩn đoán. Gỡ khi hết cần. */
+(function(){try{if(!CSS.supports('-webkit-touch-callout','none')||sessionStorage.getItem('alpha_ios_rep'))return;sessionStorage.setItem('alpha_ios_rep','1');
+window.addEventListener('load',function(){setTimeout(function(){var c=document.querySelector('.group\\/service');var r=c?c.getBoundingClientRect():null;var d={ua:navigator.userAgent,vw:innerWidth,sw:document.documentElement.scrollWidth,card:r?[Math.round(r.left),Math.round(r.width),Math.round(r.height)]:null,cardOverflowRight:r?(r.right>innerWidth+2):null};
+fetch('/wp-admin/admin-ajax.php?action=alpha_diag',{method:'POST',body:JSON.stringify(d),keepalive:true})},2500)})}catch(e){}})();
+
+/* Gợi ý "vuốt ngang" trên mobile cho bảng rộng hơn khung */
+(function(){var mq=window.matchMedia('(max-width:767px)');function run(){document.querySelectorAll('main table').forEach(function(t){var prev=t.previousElementSibling;var has=prev&&prev.classList&&prev.classList.contains('alpha-tscroll-hint');var wide=mq.matches&&t.scrollWidth>t.clientWidth+4;if(wide&&!has){var h=document.createElement('div');h.className='alpha-tscroll-hint';h.textContent='Vuốt ngang để xem đủ các cột';t.parentNode.insertBefore(h,t)}else if(!wide&&has){prev.remove()}})}
+window.addEventListener('load',function(){setTimeout(run,600);setTimeout(run,2000)});window.addEventListener('resize',run)})();
+
+/* Nút "Đặt lịch khám" mở thẳng form đặt lịch (popup 1450 của header) thay vì chuyển sang trang Liên hệ */
+(function(){document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a');if(!a)return;if(/\/lien-he\/?$/.test(location.pathname))return;var href=a.getAttribute('href')||'';var txt=(a.textContent||'').trim();if(!/^đặt lịch/i.test(txt)&&!a.classList.contains('alpha-action'))return;if(!/\/lien-he\/?(#.*)?$/.test(href.replace(location.origin,''))&&href!=='#')return;var t=document.querySelector('#brxe-agppdo');if(!t)return;e.preventDefault();t.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}))},true)})();
